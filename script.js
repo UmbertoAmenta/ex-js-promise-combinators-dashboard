@@ -24,6 +24,9 @@
 //  Stampare i dati in console in un messaggio ben formattato.
 //  Testa la funzione con la query "london"
 
+// 🎯 Bonus 1 - Risultato vuoto
+// Se l’array di ricerca è vuoto, invece di far fallire l'intera funzione, semplicemente i dati relativi a quella chiamata verranno settati a null e la frase relativa non viene stampata. Testa la funzione con la query “vienna” (non trova il meteo).
+
 async function getDashboardData(city) {
   try {
     // raccolta info - città
@@ -49,16 +52,24 @@ async function getDashboardData(city) {
     ]);
 
     // // controllo presenza risultati
-    if (!destinationInfo.length || !weatherInfo.length || !airportInfo.length) {
-      throw new Error("Uno o più fetch hanno restituito un array vuoto.");
+    if (!destinationInfo.length) {
+      throw new Error("La città non esiste o non è presente in elenco");
     }
+
+    if (!weatherInfo.length) {
+      let weatherInfo = null;
+    }
+
     // raccolta dati
+    // Bonus 1
+    //  se l'array è vuoto i risultati saranno null
     const query = {
-      city: destinationInfo[0]?.name,
-      country: destinationInfo[0]?.country,
-      temperature: weatherInfo[0]?.temperature,
-      weather: weatherInfo[0]?.weather_description,
-      airport: airportInfo[0]?.name,
+      city: destinationInfo.length > 0 ? destinationInfo[0]?.name : null,
+      country: destinationInfo.length > 0 ? destinationInfo[0]?.country : null,
+      temperature: weatherInfo.length > 0 ? weatherInfo[0]?.temperature : null,
+      weather:
+        weatherInfo.length > 0 ? weatherInfo[0]?.weather_description : null,
+      airport: airportInfo.length > 0 ? airportInfo[0]?.name : null,
     };
     return query;
   } catch (error) {
@@ -66,12 +77,18 @@ async function getDashboardData(city) {
     throw error;
   }
 }
-
-getDashboardData("london").then((result) => {
+// Bonus 1
+//  se una chiamata (esclusa quella relativa alla città: se non è presente nessuno dei suoi dati ha motivo di esistere) fallisce
+//      fallisce le informazioni contenute (null) non vengono mostrate
+getDashboardData("vienna").then((result) => {
   console.log(result);
-  console.log(
-    `${result.city} is in ${result.country}. \n` +
-      `Today there are ${result.temperature} degrees and the weather is ${result.weather}.\n` +
-      `The main airport is ${result.airport}.\n`
-  );
+  console.log(`${result.city} is in ${result.country}.`);
+  if (result.temperature && result.weather) {
+    console.log(
+      `Today there are ${result.temperature} degrees and the weather is ${result.weather}.`
+    );
+  }
+  if (result.airport) {
+    console.log(`The main airport is ${result.airport}.`);
+  }
 });
