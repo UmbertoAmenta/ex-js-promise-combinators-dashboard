@@ -27,6 +27,13 @@
 // 🎯 Bonus 1 - Risultato vuoto
 // Se l’array di ricerca è vuoto, invece di far fallire l'intera funzione, semplicemente i dati relativi a quella chiamata verranno settati a null e la frase relativa non viene stampata. Testa la funzione con la query “vienna” (non trova il meteo).
 
+// 🎯 Bonus 2 - Chiamate fallite
+// Attualmente, se una delle chiamate fallisce, **Promise.all()** rigetta l'intera operazione.
+//  Modifica `getDashboardData()` per usare **Promise.allSettled()**, in modo che:
+//      Se una chiamata fallisce, i dati relativi a quella chiamata verranno settati a null.
+//      Stampa in console un messaggio di errore per ogni richiesta fallita.
+//      Testa la funzione con un link fittizio per il meteo (es. https://www.meteofittizio.it).
+
 async function getDashboardData(city) {
   try {
     // raccolta info - città
@@ -45,38 +52,71 @@ async function getDashboardData(city) {
     ).then((res) => res.json());
 
     // esecuzione Promises
-    const [destinationInfo, weatherInfo, airportInfo] = await Promise.all([
-      getDestination,
-      getWeather,
-      getAirport,
-    ]);
+    // Bonus 2
+    //  esecuzione con promiseAllSettled
+    const [destinationInfo, weatherInfo, airportInfo] =
+      await Promise.allSettled([getDestination, getWeather, getAirport]);
 
     // // controllo presenza risultati
-    if (!destinationInfo.length) {
+    if (!destinationInfo.value.length) {
       throw new Error("La città non esiste o non è presente in elenco");
     }
 
-    if (!weatherInfo.length) {
-      let weatherInfo = null;
+    // con l'aggiunta della promiseAllSettled non recupero più array (bonus 2)
+    // if (!weatherInfo.value.length) {
+    //   let weatherInfo = null;
+    // }
+
+    // if (!airportInfo.value.length) {
+    //   let airportInfo = null;
+    // }
+
+    // Bonus 2
+    //  controllo status promises
+    const destinationInfoSettled =
+      destinationInfo.status === "fulfilled" ? destinationInfo.value : null;
+
+    const weatherInfoSettled =
+      weatherInfo.status === "fulfilled" ? weatherInfo.value : null;
+
+    const airportInfoSettled =
+      airportInfo.status === "fulfilled" ? airportInfo.value : null;
+
+    // Bonus 2
+    //  gestione errore per le chiamate fallite
+    if (destinationInfo.status === "rejected") {
+      console.error("Errore nel recupero dati località");
+    }
+    if (weatherInfo.status === "rejected") {
+      console.error("Errore nel recupero dati meteo");
+    }
+    if (airportInfo.status === "rejected") {
+      console.error("Errore nel recupero dati aeroporto in prossimità");
     }
 
     // raccolta dati
     // Bonus 1
-    //  se l'array è vuoto i risultati saranno null
+    //  se l'array è vuoto i risultati saranno null (bonus 2: non più necessario in quanto non arriva più sotto forma di array)
     const query = {
-      city: destinationInfo.length > 0 ? destinationInfo[0]?.name : null,
-      country: destinationInfo.length > 0 ? destinationInfo[0]?.country : null,
-      temperature: weatherInfo.length > 0 ? weatherInfo[0]?.temperature : null,
-      weather:
-        weatherInfo.length > 0 ? weatherInfo[0]?.weather_description : null,
-      airport: airportInfo.length > 0 ? airportInfo[0]?.name : null,
+      city: destinationInfoSettled[0]?.name || null,
+      country: destinationInfoSettled[0]?.country || null,
+      temperature: weatherInfoSettled[0]?.temperature || null,
+      weather: weatherInfoSettled[0]?.weather_description || null,
+      airport: airportInfoSettled[0]?.name || null,
     };
-    return query;
+
+    // controllo stato promises (bonus 2)
+    console.log("Destination Info:", destinationInfo);
+    console.log("Weather Info:", weatherInfo);
+    console.log("Airport Info:", airportInfo);
+
+    if (destinationInfo) return query;
   } catch (error) {
     console.error("Errore:", error);
     throw error;
   }
 }
+
 // Bonus 1
 //  se una chiamata (esclusa quella relativa alla città: se non è presente nessuno dei suoi dati ha motivo di esistere) fallisce
 //      fallisce le informazioni contenute (null) non vengono mostrate
