@@ -122,13 +122,13 @@ async function getDashboardData(city) {
 //      fallisce le informazioni contenute (null) non vengono mostrate
 getDashboardData("vienna").then((result) => {
   console.log(result);
-  console.log(`${result.city} is in ${result.country}.`);
+  let riepilogo = `${result.city} is in ${result.country}.\n`;
+
   if (result.temperature && result.weather) {
-    console.log(
-      `Today there are ${result.temperature} degrees and the weather is ${result.weather}.`
-    );
+    riepilogo += `Today there are ${result.temperature} degrees and the weather is ${result.weather}.\n`;
   }
   if (result.airport) {
-    console.log(`The main airport is ${result.airport}.`);
+    riepilogo += `The main airport is ${result.airport}.`;
   }
+  console.log(riepilogo);
 });
